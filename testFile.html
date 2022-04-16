@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Getting Started with p5.ble.js</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/addons/p5.dom.min.js"></script>
+    <script src="https://unpkg.com/p5ble@0.0.4/dist/p5.ble.js"></script>
+  </head>
+
+  <body>
+    <script>
+    const serviceUuid = "2eabb710-354b-4066-95af-d8c1d4723e48";
+    let myCharacteristic;
+    let myValue = 0;
+    let myBLE;
+
+    function setup() {
+      // Create a p5ble class
+      myBLE = new p5ble();
+
+      createCanvas(200, 200);
+      textSize(20);
+      textAlign(CENTER, CENTER);
+
+      // Create a 'Connect' button
+      const connectButton = createButton('Connect')
+      connectButton.mousePressed(connectToBle);
+    }
+
+    function connectToBle() {
+      // Connect to a device by passing the service UUID
+      myBLE.connect(serviceUuid, gotCharacteristics);
+    }
+
+    // A function that will be called once got characteristics
+    function gotCharacteristics(error, characteristics) {
+      if (error) console.log('error: ', error);
+      console.log('characteristics: ', characteristics);
+      myCharacteristic = characteristics[1];
+      console.log(characteristics);
+      // Read the value of the first characteristic
+      myBLE.read(myCharacteristic, gotValue);
+    }
+
+    // A function that will be called once got values
+    function gotValue(error, value) {
+      if (error) console.log('error: ', error);
+      console.log('value: ', value);
+      myValue = value;
+      // After getting a value, call p5ble.read() again to get the value again
+      myBLE.read(myCharacteristic, gotValue);
+    }
+
+    function draw() {
+      background(250);
+      text(myValue, 100, 100);
+    }
+    </script>
+  </body>
+</html>
