@@ -8,8 +8,10 @@
   </head>
 
   <body>
-    <p>updated</p>
     <script>
+
+    //make a time characteristic 
+
     const serviceUuid = "2eabb710-354b-4066-95af-d8c1d4723e48";
     let myCharacteristic;
     let myValue = 0;
@@ -26,6 +28,10 @@
       // Create a 'Connect' button
       const connectButton = createButton('Connect')
       connectButton.mousePressed(connectToBle);
+
+      // 'Disconnect Button'
+      const disconnectButton = createButton('Disconnect')
+      disconnectButton.mousePressed(disconnectToBle);
     }
 
     function connectToBle() {
@@ -33,6 +39,13 @@
       myBLE.connect(serviceUuid, gotCharacteristics);
     }
 
+    function disconnectToBle() {
+      // Disonnect to the device
+      myBLE.disconnect();
+      // Check if myBLE is connected
+      isConnected = myBLE.isConnected();
+    }
+    
     // A function that will be called once got characteristics
     function gotCharacteristics(error, characteristics) {
       if (error) console.log('error: ', error);
@@ -55,6 +68,12 @@
     function draw() {
       background(250);
       text(myValue, 100, 100);
+    }
+
+    function onDisconnected() {
+      console.log('Device got disconnected.');
+      isConnected = false;
+
     }
     </script>
   </body>
