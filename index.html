@@ -1,37 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Getting Started with p5.ble.js</title>
+    <title>Premie Movement Analyzer</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/p5.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/addons/p5.dom.min.js"></script>
     <script src="https://unpkg.com/p5ble@0.0.4/dist/p5.ble.js"></script>
+    <link rel="stylesheet" href="styles.css">
   </head>
 
   <body>
+    <div id="statusSquare">
+      <p id = "status" style="color: red;">Disconnected</p>
+    </div>
+    <div id="title">
+      <h1>Premature Infant Movement Tracker Dashboard</h1>
+      <h3>Ensure the device is powered on and securely attached to infant, then click connect and select "MovementTracker" to begin data collection.</h3>
+      <h4>Bluetooth connection can only be made in the Chrome browser.</h4>
+    </div>
+    <div id="buttons">
+
+    </div>
+    <div id="data">
+      <div id="time">
+        <p> Time Since Start: </p>
+        <p id = "timeSinceStart">--</p>
+      </div>
+      <div id="counter">
+        <p>Number of Movements: </p>
+        <p id="numberOfMovements">--</p>
+      </div>
+      <div id="magnitude">
+        <p>Magnitude: </p>
+        <p id="valueOfMagnitude">--</p>
+      </div>
+    </div>
     <script>
 
     //make a time characteristic 
 
     const serviceUuid = "2eabb710-354b-4066-95af-d8c1d4723e48";
-    let myCharacteristic;
-    let myValue = 0;
+    let movementCharacteristic;
+    let magnitudeCharacteristic;
     let myBLE;
+    let count =0;
+    let magnitude=0;
 
     function setup() {
       // Create a p5ble class
       myBLE = new p5ble();
 
-      createCanvas(200, 200);
-      textSize(20);
-      textAlign(CENTER, CENTER);
-
       // Create a 'Connect' button
-      const connectButton = createButton('Connect')
-      connectButton.mousePressed(connectToBle);
+      // const connectButton = createButton('Connect');
+      // connectButton.id("connectBttn");
+      // connectButton.mousePressed(connectToBle);
 
       // 'Disconnect Button'
-      const disconnectButton = createButton('Disconnect')
-      disconnectButton.mousePressed(disconnectToBle);
+      let connectButton = document.createElement("button");
+      connectButton.setAttribute("id", "connectButtn");
+      connectButton.innerHTML = "Connect";
+      connectButton.setAttribute("onClick", "connectToBle()");
+      document.getElementById("buttons").appendChild(connectButton);
+
+      let disconnectButton = document.createElement("button");
+      disconnectButton.setAttribute("id", "disconnectButtn");
+      disconnectButton.innerHTML = "Disconnect";
+      disconnectButton.setAttribute("onClick", "disconnectToBle()");
+      document.getElementById("buttons").appendChild(disconnectButton);
+
     }
 
     function connectToBle() {
@@ -44,37 +79,56 @@
       myBLE.disconnect();
       // Check if myBLE is connected
       isConnected = myBLE.isConnected();
+      document.getElementById("status").setAttribute("style", "color: red;");
+      document.getElementById("status").innerHTML = "Disconnected";
+      alert("Device has been disconnected.");
     }
     
     // A function that will be called once got characteristics
     function gotCharacteristics(error, characteristics) {
       if (error) console.log('error: ', error);
       console.log('characteristics: ', characteristics);
-      myCharacteristic = characteristics[1];
-      console.log(characteristics);
+      magnitudeCharacteristic = characteristics[0];
+      movementCharacteristic = characteristics[1];
+
+
+      console.log(magnitudeCharacteristic.value);
+
+      // Set datatype to 'custom', p5.ble.js won't parse the data, will return data as it is.
+      myBLE.startNotifications(magnitudeCharacteristic, getMagnitude, 'int');
+      myBLE.startNotifications(movementCharacteristic, getMovement, 'int');
+      // magnitudeCharacteritic = characteristics[0];
+      //movementCharacteristic = characteristics[1];
       // Read the value of the first characteristic
-      myBLE.read(myCharacteristic, gotValue);
+      //myBLE.read(movementCharacteristic, getMovement);
+      
+      // myBLE.read("f681bdcf-33af-4278-acc5-46770b2a331d", getMagnitude);
+
+      if (myBLE.isConnected()) {
+        document.getElementById("status").setAttribute("style", "color: green;");
+        document.getElementById("status").innerHTML = "Connected";
+      }
+
+      //myBLE.read(magnitudeCharacteristic, getMagnitude, float64);
     }
 
     // A function that will be called once got values
-    function gotValue(error, value) {
-      if (error) console.log('error: ', error);
-      console.log('value: ', value);
-      myValue = value;
+    function getMovement(value) {
+      //if (error) console.log('error: ', error);
+      console.log('movement: ', value);
+      document.getElementById("numberOfMovements").innerHTML = value;
       // After getting a value, call p5ble.read() again to get the value again
-      myBLE.read(myCharacteristic, gotValue);
+      //myBLE.read(movementCharacteristic, getMovement);
     }
 
-    function draw() {
-      background(250);
-      text(myValue, 100, 100);
+    function getMagnitude(value) {
+      //if (error) console.log('error: ', error);
+      console.log('magnitude: ', value/100);
+      document.getElementById("valueOfMagnitude").innerHTML = value/100;
+      //let v = value.getFloat32(0, true);
+      //myBLE.read(magnitudeCharacteristic, getMagnitude);
     }
-
-    function onDisconnected() {
-      console.log('Device got disconnected.');
-      isConnected = false;
-
-    }
+  
     </script>
   </body>
 </html>

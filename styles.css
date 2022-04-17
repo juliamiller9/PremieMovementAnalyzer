@@ -1,0 +1,60 @@
+body {
+    font-family:'Franklin Gothic Medium', Arial, sans-serif;
+    text-align: center;
+    background-color: whitesmoke;
+}
+
+#status{
+    position: fixed;
+    margin: none;
+    padding: 7px;
+    right: 0px;
+    top: -17px;
+    width: 100px;
+    /* border-left: 1px solid gray;
+    border-bottom: 1px solid gray; */
+}
+
+button {
+    border-radius: 15px;
+    margin: 3px;
+    height: 60px;
+    width: 200px;
+    color: white;
+    font-weight: 900;
+    border: none;
+    font-size: 2em;
+}
+
+#title{
+    position: relative;
+    width: 70%;
+    left: 15%;
+}
+
+#connectButtn {
+    background-color: green;
+}
+
+#disconnectButtn {
+    background-color: red;
+}
+
+h4{
+    color: gray;
+}
+#data {
+    margin-top: 50px;
+    float: left;
+    text-align: left;
+}
+
+#counter {
+    margin-top: 30px;
+}
+
+#defaultCanvas0 {
+    height: 1px;
+    width: 1px;
+    display: none;
+}
