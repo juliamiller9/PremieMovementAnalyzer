@@ -1,3 +1,4 @@
+<!-- /test -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -17,10 +18,14 @@
       <h3>Ensure the device is powered on and securely attached to infant, then click connect and select "MovementTracker" to begin data collection.</h3>
       <h4>Bluetooth connection can only be made in the Chrome browser.</h4>
     </div>
-    <div id="buttons">
 
+    <div id="buttons">
     </div>
+
+
     <div id="data">
+      <button id="startUp">start</button>
+      <button id="stopTime">end</button>
       <div id="time">
         <p> Time Since Start: </p>
         <p id = "timeSinceStart">--</p>
@@ -34,39 +39,82 @@
         <p id="valueOfMagnitude">--</p>
       </div>
     </div>
+    
+    <div id="tableBox">
+      <table id="tableData">
+        <tr>
+          <th>Number of Movements</th>
+          <th>Time</th>
+          <th>Magnitude of Movement</th>
+        </tr>
+      </table>
+    </div>
+
+
+
     <script>
 
-    //make a time characteristic 
+    //BLE References: https://itpnyu.github.io/p5ble-website/
 
+    // The UUID of the service the arduino advertises that we connect to
     const serviceUuid = "2eabb710-354b-4066-95af-d8c1d4723e48";
+
+    // Our BLE variables
     let movementCharacteristic;
     let magnitudeCharacteristic;
     let myBLE;
-    let count =0;
-    let magnitude=0;
+
+    // Global variables
+    var startTime;
+    var currentTime;
+    var Interval;
 
     function setup() {
       // Create a p5ble class
       myBLE = new p5ble();
 
-      // Create a 'Connect' button
-      // const connectButton = createButton('Connect');
-      // connectButton.id("connectBttn");
-      // connectButton.mousePressed(connectToBle);
-
-      // 'Disconnect Button'
+      // Connect button
       let connectButton = document.createElement("button");
       connectButton.setAttribute("id", "connectButtn");
       connectButton.innerHTML = "Connect";
       connectButton.setAttribute("onClick", "connectToBle()");
       document.getElementById("buttons").appendChild(connectButton);
 
+      // Disconnect button
       let disconnectButton = document.createElement("button");
       disconnectButton.setAttribute("id", "disconnectButtn");
       disconnectButton.innerHTML = "Disconnect";
       disconnectButton.setAttribute("onClick", "disconnectToBle()");
       document.getElementById("buttons").appendChild(disconnectButton);
 
+      // Start Button
+      // Interval code referenced from: https://codepen.io/cathydutton/pen/xxpOOw?editors=1010
+      var startButt = document.getElementById("startUp");
+      var endButt = document.getElementById("stopTime");
+      startButt.onclick = function() {
+        populateTable("test1", "test2", "test3");
+        clearInterval(Interval);
+        startTime = Date.now();
+        Interval = setInterval(testStartTime, 1);
+        //setting interval will cause testStartTime to call every 1000 milliseconds
+      }
+      endButt.setAttribute("onClick", "testEndTime()");
+    }
+
+
+
+    function testStartTime() {
+      //console.log("This should print every 10 milliseconds");
+      var elapsedTime = Date.now() - startTime;
+      var formatted = new Date(elapsedTime);
+      formatted = formatted.toISOString().slice(11, 22);
+      document.getElementById("timeSinceStart").innerHTML = formatted;
+      //console.log(formatted);
+    }
+
+    function testEndTime() {
+      console.log("ended the timer");
+      clearInterval(Interval);
     }
 
     function connectToBle() {
@@ -91,42 +139,47 @@
       magnitudeCharacteristic = characteristics[0];
       movementCharacteristic = characteristics[1];
 
-
-      console.log(magnitudeCharacteristic.value);
-
       // Set datatype to 'custom', p5.ble.js won't parse the data, will return data as it is.
       myBLE.startNotifications(magnitudeCharacteristic, getMagnitude, 'int');
       myBLE.startNotifications(movementCharacteristic, getMovement, 'int');
-      // magnitudeCharacteritic = characteristics[0];
-      //movementCharacteristic = characteristics[1];
-      // Read the value of the first characteristic
-      //myBLE.read(movementCharacteristic, getMovement);
-      
-      // myBLE.read("f681bdcf-33af-4278-acc5-46770b2a331d", getMagnitude);
 
       if (myBLE.isConnected()) {
         document.getElementById("status").setAttribute("style", "color: green;");
         document.getElementById("status").innerHTML = "Connected";
       }
-
-      //myBLE.read(magnitudeCharacteristic, getMagnitude, float64);
     }
 
-    // A function that will be called once got values
+    // Function that will constantly get the value of movements
     function getMovement(value) {
-      //if (error) console.log('error: ', error);
       console.log('movement: ', value);
       document.getElementById("numberOfMovements").innerHTML = value;
-      // After getting a value, call p5ble.read() again to get the value again
-      //myBLE.read(movementCharacteristic, getMovement);
     }
 
+    // Function that will constantly get the value of the magnitude of the acceleration of the accelerometer
     function getMagnitude(value) {
-      //if (error) console.log('error: ', error);
       console.log('magnitude: ', value/100);
       document.getElementById("valueOfMagnitude").innerHTML = value/100;
-      //let v = value.getFloat32(0, true);
-      //myBLE.read(magnitudeCharacteristic, getMagnitude);
+    }
+
+    function populateTable(movementNum, time, magValue) {
+      console.log("populate the table called");
+
+      //tr per row
+      //td per entry
+      var row = document.createElement("tr");
+      var movementNumEntry = document.createElement("td");
+      var timeEntry = document.createElement("td");
+      var magValueEntry = document.createElement("td");
+
+      movementNumEntry.innerHTML = movementNum;
+      timeEntry.innerHTML = time;
+      magValueEntry.innerHTML = magValue;
+
+      row.appendChild(movementNumEntry);
+      row.appendChild(timeEntry);
+      row.appendChild(magValueEntry);
+
+      document.getElementById("tableData").appendChild(row);
     }
   
     </script>

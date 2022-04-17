@@ -23,7 +23,11 @@ button {
     color: white;
     font-weight: 900;
     border: none;
-    font-size: 2em;
+    font-size: 1.9em
+}
+
+button:hover {
+    box-shadow: 2px 2px lightslategray;
 }
 
 #title{
@@ -57,4 +61,13 @@ h4{
     height: 1px;
     width: 1px;
     display: none;
+}
+
+#tableBox {
+    position: absolute;
+    top: 800px;
+    overflow: scroll;
+    height: 400px;
+    width: 60%;
+    left: 41%;
 }
