@@ -15,7 +15,7 @@
 
   <body>
     <div id="statusSquare">
-      <p id = "status" style="color: red;">Disconnected</p>
+      <p id = "status" style="color: red;">Status: Disconnected</p>
     </div>
     <div id="data">
       <div id="time">
@@ -145,8 +145,8 @@
       // Update myBLE connection status
       isConnected = myBLE.isConnected();
       document.getElementById("status").setAttribute("style", "color: red;");
-      document.getElementById("status").innerHTML = "Disconnected";
-      alert("Device has been disconnected.");
+      document.getElementById("status").innerHTML = "Status: Disconnected";
+      alert("Trial has been ended. Don't forget to download run data.");
       document.getElementById("numberOfMovements").innerHTML = "--";
       document.getElementById("valueOfMagnitude").innerHTML = "--";
       document.getElementById("timeSinceStart").innerHTML = "--";
@@ -167,7 +167,7 @@
 
       if (myBLE.isConnected()) {
         document.getElementById("status").setAttribute("style", "color: green;");
-        document.getElementById("status").innerHTML = "Connected";
+        document.getElementById("status").innerHTML = "Status: Connected";
       }
     }
 
@@ -236,7 +236,7 @@
         legend: 'left',
         chartArea: {'width': '90%', 'height': '80%'},
         vAxis: {
-          title: "Magnitude (G)",
+          title: "Acceleration (G)",
           textStyle: {
             italic: false,
             color: 'black',
@@ -269,9 +269,11 @@
         // Get each row data
         var rows = document.getElementsByClassName('tocsv');
         var csvrow = [];
-        csvrow.push("Time");
+        csvrow.push("Time (ms)");
         csvrow.push("Accel (G)");
         csvrow.push("# Movements");
+        csvrow.push(" ");
+        csvrow.push("NOTE: Baseline acceleration is 1G due to gravity");
         csv_data.push(csvrow.join(","));
         for (var i = 0; i < rows.length; i++) {
 
