@@ -1,5 +1,5 @@
 body {
-    font-family:'Franklin Gothic Medium', Arial, sans-serif;
+    font-family:'Roboto',sans-serif;
     text-align: center;
     background-color: whitesmoke;
 }
@@ -15,6 +15,11 @@ body {
     border-bottom: 1px solid gray; */
 }
 
+#buttons {
+    position: relative;
+    margin-bottom: 30px;
+}
+
 button {
     border-radius: 15px;
     margin: 3px;
@@ -24,39 +29,57 @@ button {
     font-weight: 900;
     border: none;
     font-size: 1.9em
+
 }
 
 button:hover {
     box-shadow: 2px 2px lightslategray;
 }
 
-#title{
-    position: relative;
-    width: 70%;
-    left: 15%;
-}
-
 #connectButtn {
     background-color: green;
+    margin-right: 20px;
 }
 
 #disconnectButtn {
     background-color: red;
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+#downloadBttn {
+    margin-left: 20px;
+    background-color: lightskyblue;
+    opacity: 20%;
 }
 
 h4{
     color: gray;
 }
 #data {
-    margin-top: 50px;
-    float: left;
+    position: relative;
     text-align: left;
+    display: inline-flex;
+    border-top: solid black 0.5px;
+    border-bottom: solid black 0.5px;
+    padding-left: 20px;
+    padding-right: 20px;
+    margin-top: 30px;
+    margin-bottom: 30px;
+    font-size: 20px;
 }
 
+#data div {
+    margin: 20px;
+    text-align: center;
+}
 #counter {
     margin-top: 30px;
 }
 
+.datatitle {
+    font-weight: bold;
+}
 #defaultCanvas0 {
     height: 1px;
     width: 1px;
@@ -64,10 +87,22 @@ h4{
 }
 
 #tableBox {
-    position: absolute;
-    top: 800px;
+    display: none;
+    position: relative;
     overflow: scroll;
     height: 400px;
     width: 60%;
-    left: 41%;
+    left: 40%;
+    margin-top: 50px;
 }
+
+#googleChart {
+    position: relative;
+    height: 400px;
+    width: 70%;
+    margin-left: 15%;
+    margin-right: 15%;
+    margin-bottom: 50px;
+}
+
+

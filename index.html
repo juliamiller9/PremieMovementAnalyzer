@@ -1,11 +1,14 @@
-<!-- /test -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <title>Premie Movement Analyzer</title>
+    <!-- P5js API -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/p5.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/addons/p5.dom.min.js"></script>
     <script src="https://unpkg.com/p5ble@0.0.4/dist/p5.ble.js"></script>
+
+    <!-- Google Charts API -->
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <link rel="stylesheet" href="styles.css">
   </head>
 
@@ -13,44 +16,29 @@
     <div id="statusSquare">
       <p id = "status" style="color: red;">Disconnected</p>
     </div>
-    <div id="title">
-      <h1>Premature Infant Movement Tracker Dashboard</h1>
-      <h3>Ensure the device is powered on and securely attached to infant, then click connect and select "MovementTracker" to begin data collection.</h3>
-      <h4>Bluetooth connection can only be made in the Chrome browser.</h4>
-    </div>
-
-    <div id="buttons">
-    </div>
-
-
     <div id="data">
-      <button id="startUp">start</button>
-      <button id="stopTime">end</button>
       <div id="time">
-        <p> Time Since Start: </p>
+        <p class="datatitle"> Time Since Start</p>
         <p id = "timeSinceStart">--</p>
       </div>
       <div id="counter">
-        <p>Number of Movements: </p>
+        <p class="datatitle">Number of Movements</p>
         <p id="numberOfMovements">--</p>
       </div>
       <div id="magnitude">
-        <p>Magnitude: </p>
+        <p class="datatitle">Magnitude (G)</p>
         <p id="valueOfMagnitude">--</p>
       </div>
     </div>
-    
+    <div id="buttons">
+    </div>
+    <div id="googleChart"></div>
     <div id="tableBox">
       <table id="tableData">
         <tr>
-          <th>Number of Movements</th>
-          <th>Time</th>
-          <th>Magnitude of Movement</th>
         </tr>
       </table>
     </div>
-
-
 
     <script>
 
@@ -67,7 +55,21 @@
     // Global variables
     var startTime;
     var currentTime;
-    var Interval;
+    var elapsedTime;
+
+    // Two intervals. timeInterval is the global timer. dataInterval is the rate at which data is grabbed
+    var timeInterval;
+    var dataInterval;
+    var tableInterval;
+
+    // Two variables storing most recent movement and magnitude data updated by the notification + handlers
+    var movementTracker;
+    var magnitudeTracker;
+
+    // Google Chart Data and Options
+    var chart;
+    var chartData;
+    var options;
 
     function setup() {
       // Create a p5ble class
@@ -86,56 +88,75 @@
       disconnectButton.innerHTML = "Disconnect";
       disconnectButton.setAttribute("onClick", "disconnectToBle()");
       document.getElementById("buttons").appendChild(disconnectButton);
-
-      // Start Button
       // Interval code referenced from: https://codepen.io/cathydutton/pen/xxpOOw?editors=1010
-      var startButt = document.getElementById("startUp");
-      var endButt = document.getElementById("stopTime");
-      startButt.onclick = function() {
-        populateTable("test1", "test2", "test3");
-        clearInterval(Interval);
-        startTime = Date.now();
-        Interval = setInterval(testStartTime, 1);
-        //setting interval will cause testStartTime to call every 1000 milliseconds
-      }
-      endButt.setAttribute("onClick", "testEndTime()");
+
+      let downloadButton = document.createElement("button");
+      downloadButton.setAttribute("id", "downloadBttn");
+      downloadButton.innerHTML = "Download";
+      document.getElementById("buttons").appendChild(downloadButton);
     }
 
-
-
-    function testStartTime() {
-      //console.log("This should print every 10 milliseconds");
-      var elapsedTime = Date.now() - startTime;
+    function startTimer() {
+      elapsedTime = Date.now() - startTime;
       var formatted = new Date(elapsedTime);
       formatted = formatted.toISOString().slice(11, 22);
       document.getElementById("timeSinceStart").innerHTML = formatted;
-      //console.log(formatted);
     }
 
-    function testEndTime() {
-      console.log("ended the timer");
-      clearInterval(Interval);
+    function endIntervals() {
+      console.log("ended all intervals");
+      clearInterval(timeInterval);
+      clearInterval(dataInterval);
+      clearInterval(tableInterval);
+    }
+
+    // This function will call every second (right now) and grab the most recent data and chart it
+    function collectAndChartData() {
+
+      if(chartData.getNumberOfRows() == 50) {
+        chartData.removeRow(0);
+      }
+
+      chartData.addRow([elapsedTime, magnitudeTracker, 1.2]);
+      chart.draw(chartData, options);
     }
 
     function connectToBle() {
       // Connect to a device by passing the service UUID
       myBLE.connect(serviceUuid, gotCharacteristics);
+      loadData();
+      clearInterval(timeInterval);
+      clearInterval(dataInterval);
+      clearInterval(tableInterval);
+      startTime = Date.now();
+      timeInterval = setInterval(startTimer, 10);
+      dataInterval = setInterval(collectAndChartData, 80);
+      tableInterval = setInterval(populateTable, 250);
+      let downloadButton = document.getElementById("downloadBttn");
+      downloadButton.removeAttribute("onClick");
+      downloadButton.style.opacity =  "0.2";
     }
 
     function disconnectToBle() {
-      // Disonnect to the device
+      // Disonnect from the device
       myBLE.disconnect();
-      // Check if myBLE is connected
+
+      // Update myBLE connection status
       isConnected = myBLE.isConnected();
       document.getElementById("status").setAttribute("style", "color: red;");
       document.getElementById("status").innerHTML = "Disconnected";
       alert("Device has been disconnected.");
+      document.getElementById("numberOfMovements").innerHTML = "--";
+      document.getElementById("valueOfMagnitude").innerHTML = "--";
+      document.getElementById("timeSinceStart").innerHTML = "--";
+      let downloadButton = document.getElementById("downloadBttn");
+      downloadButton.setAttribute("onClick", "tableToCSV()");
+      downloadButton.style.opacity =  "1";
+      endIntervals();
     }
     
     // A function that will be called once got characteristics
     function gotCharacteristics(error, characteristics) {
-      if (error) console.log('error: ', error);
-      console.log('characteristics: ', characteristics);
       magnitudeCharacteristic = characteristics[0];
       movementCharacteristic = characteristics[1];
 
@@ -149,39 +170,155 @@
       }
     }
 
-    // Function that will constantly get the value of movements
+    // Handler that will constantly get the value of movements
     function getMovement(value) {
-      console.log('movement: ', value);
+      movementTracker = value;
       document.getElementById("numberOfMovements").innerHTML = value;
     }
 
-    // Function that will constantly get the value of the magnitude of the acceleration of the accelerometer
+    // Handler that will constantly get the value of the magnitude of the acceleration of the accelerometer
     function getMagnitude(value) {
-      console.log('magnitude: ', value/100);
-      document.getElementById("valueOfMagnitude").innerHTML = value/100;
+      magnitudeTracker = value/100;
+      document.getElementById("valueOfMagnitude").innerHTML = magnitudeTracker;
     }
 
-    function populateTable(movementNum, time, magValue) {
-      console.log("populate the table called");
+  
 
+    // Function that takes three parameters to populate the table
+    function populateTable() {
+      console.log("populate table called");
       //tr per row
       //td per entry
       var row = document.createElement("tr");
-      var movementNumEntry = document.createElement("td");
+      row.setAttribute("class", "tocsv");
       var timeEntry = document.createElement("td");
+      timeEntry.setAttribute("class", "tocsvs");
       var magValueEntry = document.createElement("td");
+      magValueEntry.setAttribute("class", "tocsvs");
+      var movementNumEntry = document.createElement("td");
+      movementNumEntry.setAttribute("class", "tocsvs");
 
-      movementNumEntry.innerHTML = movementNum;
-      timeEntry.innerHTML = time;
-      magValueEntry.innerHTML = magValue;
+      movementNumEntry.innerHTML = movementTracker;
+      timeEntry.innerHTML = elapsedTime;
+      magValueEntry.innerHTML = magnitudeTracker;
 
-      row.appendChild(movementNumEntry);
       row.appendChild(timeEntry);
       row.appendChild(magValueEntry);
+      row.appendChild(movementNumEntry);
 
       document.getElementById("tableData").appendChild(row);
     }
   
+    // Load Visualization API and corechart package
+    google.charts.load('current', {'packages':['corechart']});
+
+    // Set callback to run when Google Visualization API loaded
+    google.charts.setOnLoadCallback(loadData);
+
+    //Function that draws the chart based on current data
+    function loadData() {
+      // Creating our data to be charted
+      chartData = new google.visualization.arrayToDataTable([
+        ['Time (seconds)', 'Acceleration (G)', 'Threshold'],
+        [0,0, 1.2]
+      ]);
+      options = {
+        series: {
+          1: {lineDashStyle: [4, 4] }
+        },
+        titleTextStyle: {
+          color: 'black',
+          font: 'Franklin Gothic Medium',
+          fontSize: 20
+        },
+        curveType: 'function',
+        legend: 'left',
+        chartArea: {'width': '90%', 'height': '80%'},
+        vAxis: {
+          title: "Magnitude (G)",
+          textStyle: {
+            italic: false,
+            color: 'black',
+          },
+          viewWindow: {
+            min: -1,
+            max: 5
+          }
+        },
+        hAxis: {
+          title: "Time (ms)",
+          textStyle: {
+            bold: true,
+            color: 'black',
+            fontSize: 15
+          },
+          gridlines: {count: 3}
+        }
+      };
+      chart = new google.visualization.LineChart(document.getElementById("googleChart"));
+
+      chart.draw(chartData, options);
+    }
+      //from https://www.geeksforgeeks.org/how-to-export-html-table-to-csv-using-javascript/
+      function tableToCSV() {
+        console.log("downloading...");
+        // Variable to store the final csv data
+        var csv_data = [];
+
+        // Get each row data
+        var rows = document.getElementsByClassName('tocsv');
+        var csvrow = [];
+        csvrow.push("Time");
+        csvrow.push("Accel (G)");
+        csvrow.push("# Movements");
+        csv_data.push(csvrow.join(","));
+        for (var i = 0; i < rows.length; i++) {
+
+          // Get each column data
+          var cols = rows[i].querySelectorAll('.tocsvs', '.tocvsh');
+
+          // Stores each csv row data
+          csvrow = [];
+          for (var j = 0; j < cols.length; j++) {
+
+            // Get the text data of each cell of
+            // a row and push it to csvrow
+            csvrow.push(cols[j].innerHTML);
+          }
+
+          // Combine each column value with comma
+          csv_data.push(csvrow.join(","));
+        }
+        // combine each row data with new line character
+        csv_data = csv_data.join('\n');
+
+        downloadCSVFile(csv_data);
+      }
+
+      function downloadCSVFile(csv_data) {
+
+        // Create CSV file object and feed our
+        // csv_data into it
+        CSVFile = new Blob([csv_data], { type: "text/csv" });
+
+        // Create to temporary link to initiate
+        // download process
+        var temp_link = document.createElement('a');
+
+        // Download csv file
+        temp_link.download = "data.csv";
+        var url = window.URL.createObjectURL(CSVFile);
+        temp_link.href = url;
+
+        // This link should not be displayed
+        temp_link.style.display = "none";
+        document.body.appendChild(temp_link);
+
+        // Automatically click the link to trigger download
+        temp_link.click();
+        document.body.removeChild(temp_link);
+      }
+
     </script>
   </body>
 </html>
