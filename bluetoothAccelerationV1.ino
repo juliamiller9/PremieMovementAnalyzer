@@ -81,7 +81,7 @@ void loop() {
       if (IMU.accelerationAvailable()) {
         IMU.readAcceleration(x, y, z);
         x = x-avg_x;
-        y=y-avg_y;
+        y = y-avg_y;
         z = z-avg_z;
         float magnitude = sqrt(x*x+y*y+z*z);
 
