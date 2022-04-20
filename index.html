@@ -27,7 +27,7 @@
         <p id="numberOfMovements">--</p>
       </div>
       <div id="magnitude">
-        <p class="datatitle">Magnitude (G)</p>
+        <p class="datatitle">Acceleration (G)</p>
         <p id="valueOfMagnitude">--</p>
       </div>
     </div>
@@ -153,6 +153,7 @@
       let downloadButton = document.getElementById("downloadBttn");
       downloadButton.setAttribute("onClick", "tableToCSV()");
       downloadButton.style.opacity =  "1";
+      
       endIntervals();
     }
     
