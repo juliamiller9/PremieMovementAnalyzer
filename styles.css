@@ -1,5 +1,5 @@
 body {
-    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    font-family: "Helvetica";
     text-align: center;
     background-color: whitesmoke;
 }
@@ -12,8 +12,6 @@ body {
     top: -17px;
     width: 100px;
     text-align: right;
-    /* border-left: 1px solid gray;
-    border-bottom: 1px solid gray; */
 }
 
 #buttons {
@@ -29,7 +27,7 @@ button {
     color: white;
     font-weight: 900;
     border: none;
-    font-size: 1.9em
+    font-size: 1.5em
 
 }
 
@@ -80,11 +78,6 @@ h4{
 
 .datatitle {
     font-weight: bold;
-}
-#defaultCanvas0 {
-    height: 1px;
-    width: 1px;
-    display: none;
 }
 
 #tableBox {

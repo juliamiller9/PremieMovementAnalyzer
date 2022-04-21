@@ -9,7 +9,7 @@
     <script src="https://unpkg.com/p5ble@0.0.4/dist/p5.ble.js"></script>
 
     <!-- Used Google Charts API -->
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
     <link rel="stylesheet" href="styles.css">
   </head>
 
@@ -27,7 +27,7 @@
         <p id="numberOfMovements">--</p>
       </div>
       <div id="magnitude">
-        <p class="datatitle">Acceleration (G)</p>
+        <p class="datatitle">Acceleration (g)</p>
         <p id="valueOfMagnitude">--</p>
       </div>
     </div>
@@ -36,8 +36,6 @@
     <div id="googleChart"></div>
     <div id="tableBox">
       <table id="tableData">
-        <tr>
-        </tr>
       </table>
     </div>
 
@@ -47,6 +45,13 @@
 
     // The UUID of the service the arduino advertises that we connect to
     const serviceUuid = "2eabb710-354b-4066-95af-d8c1d4723e48";
+
+    //Threshold acceleration for movement definition (based on Arduino code)
+    let currThreshold = 1.15;
+
+    //How frequently data should be collected to be put into the graph/Excel file
+    let graphSaveFreq = 40;
+    let fileSaveFreq = 80;
 
     // Our BLE variables
     let movementCharacteristic;
@@ -114,11 +119,11 @@
     // This function will call every second (right now) and grab the most recent data and chart it
     function collectAndChartData() {
 
-      if(chartData.getNumberOfRows() == 50) {
+      if(chartData.getNumberOfRows() == 100) {
         chartData.removeRow(0);
       }
 
-      chartData.addRow([elapsedTime, magnitudeTracker, 1.2]);
+      chartData.addRow([elapsedTime, magnitudeTracker, currThreshold]);
       chart.draw(chartData, options);
     }
 
@@ -131,8 +136,8 @@
       clearInterval(tableInterval);
       startTime = Date.now();
       timeInterval = setInterval(startTimer, 10);
-      dataInterval = setInterval(collectAndChartData, 80);
-      tableInterval = setInterval(populateTable, 250);
+      dataInterval = setInterval(collectAndChartData, graphSaveFreq);
+      tableInterval = setInterval(populateTable, fileSaveFreq);
       let downloadButton = document.getElementById("downloadBttn");
       downloadButton.removeAttribute("onClick");
       downloadButton.style.opacity =  "0.2";
@@ -221,30 +226,25 @@
     function loadData() {
       // Creating our data to be charted
       chartData = new google.visualization.arrayToDataTable([
-        ['Time (seconds)', 'Acceleration (G)', 'Threshold'],
-        [0,0, 1.2]
+        ['Time (seconds)', 'Acceleration (g)', 'Threshold'],
+        [0,0, currThreshold]
       ]);
       options = {
         series: {
           1: {lineDashStyle: [4, 4] }
         },
-        titleTextStyle: {
-          color: 'black',
-          font: 'Franklin Gothic Medium',
-          fontSize: 20
-        },
         curveType: 'function',
         legend: 'left',
         chartArea: {'width': '90%', 'height': '80%'},
         vAxis: {
-          title: "Acceleration (G)",
+          title: "Acceleration (g)",
           textStyle: {
             italic: false,
             color: 'black',
           },
           viewWindow: {
             min: -1,
-            max: 5
+            max: 3
           }
         },
         hAxis: {
@@ -254,7 +254,6 @@
             color: 'black',
             fontSize: 15
           },
-          gridlines: {count: 3}
         }
       };
       chart = new google.visualization.LineChart(document.getElementById("googleChart"));
@@ -271,7 +270,7 @@
         var rows = document.getElementsByClassName('tocsv');
         var csvrow = [];
         csvrow.push("Time (ms)");
-        csvrow.push("Accel (G)");
+        csvrow.push("Accel (g)");
         csvrow.push("# Movements");
         csvrow.push(" ");
         csvrow.push("NOTE: Baseline acceleration is 1G due to gravity");
@@ -287,7 +286,12 @@
 
             // Get the text data of each cell of
             // a row and push it to csvrow
-            csvrow.push(cols[j].innerHTML);
+            if (cols[j].innerHTML == "undefined") {
+              csvrow.push("");
+            }
+            else {
+              csvrow.push(cols[j].innerHTML);
+            }
           }
 
           // Combine each column value with comma
@@ -300,7 +304,10 @@
       }
 
       function downloadCSVFile(csv_data) {
-
+        let filename = prompt("Please enter filename for trial data: ");
+        if (filename == null || filename == "") {
+          filename = "data";
+        }
         // Create CSV file object and feed our
         // csv_data into it
         CSVFile = new Blob([csv_data], { type: "text/csv" });
@@ -310,7 +317,7 @@
         var temp_link = document.createElement('a');
 
         // Download csv file
-        temp_link.download = "data.csv";
+        temp_link.download = filename + ".csv";
         var url = window.URL.createObjectURL(CSVFile);
         temp_link.href = url;
 
